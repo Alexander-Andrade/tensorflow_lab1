@@ -20,25 +20,30 @@ x = tf.placeholder(tf.float32, shape=(batch_size, 1))
 y = tf.placeholder(tf.float32, shape=(batch_size, 1))
 
 # Define variables to be learned
-with tf.variable_scope("linear-regression"):
-    W = tf.get_variable("weights", shape=(1, 1), initializer=tf.random_normal_initializer())
-    b = tf.get_variable("bias", (1,), initializer=tf.constant_initializer(0.0))
-    y_pred = tf.matmul(x, W) + b
-    loss = tf.reduce_sum((y - y_pred)**2/n_samples)
 
+W = tf.get_variable("weights", shape=(1, 1), initializer=tf.random_normal_initializer())
+b = tf.get_variable("bias", (1,), initializer=tf.constant_initializer(0.0))
+y_pred = tf.matmul(x, W) + b
+loss = tf.reduce_sum((y - y_pred)**2/n_samples, name='loss')
 opt_op = tf.train.AdamOptimizer().minimize(loss)
 
+summary_loss = tf.summary.scalar('loss', loss)
+
 with tf.Session() as sess:
+    file_writer = tf.summary.FileWriter('.', sess.graph)
     # Initialize Variables in graph
     sess.run(tf.global_variables_initializer())
     # Gradient descent loop for 500 steps
-    for _ in range(1000):
+    for i in range(1000):
         # Select random minibatch
         indices = np.random.choice(n_samples, batch_size)
         X_batch, y_batch = x_train[indices], y_train[indices]
         # Do gradient descent step
-        _, loss_val = sess.run([opt_op, loss], feed_dict={x: X_batch, y: y_batch})
-        # print(loss_val)
+        _, loss_val, summary_loss_str = sess.run([opt_op, loss, summary_loss], feed_dict={x: X_batch, y: y_batch})
+        file_writer.add_summary(summary_loss_str, i)
+       
+    file_writer.close()
+
     res = sess.run([W, b])
 
     w_res = res[0][0][0]
