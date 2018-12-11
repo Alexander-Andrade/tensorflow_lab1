@@ -41,7 +41,7 @@ with tf.Session() as sess:
         # Do gradient descent step
         _, loss_val, summary_loss_str = sess.run([opt_op, loss, summary_loss], feed_dict={x: X_batch, y: y_batch})
         file_writer.add_summary(summary_loss_str, i)
-       
+
     file_writer.close()
 
     res = sess.run([W, b])
